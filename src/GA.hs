@@ -18,7 +18,6 @@ data Parameters = Parameters
     , pCrossover     :: Float
     , pMutation      :: Float
     , elitism        :: Float
-    , maxGenerations :: Int
     , tournamentSize :: Int
     } deriving (Show)
 
@@ -72,10 +71,11 @@ evolve p@(Population info pop) =
               popSize = size info
 
 runGA :: DNA a
-      => (Int -> Population a -> IO ())
+      => Int
+      -> (Int -> Population a -> IO ())
       -> Population a
       -> IO (Int, Maybe a)
-runGA statAction pop@(Population info _) =
+runGA maxGen statAction pop@(Population _ _) =
     result <$> iterateUntilM done step (pop, 0)
     where step (p, gen) = do
             statAction gen p
@@ -83,4 +83,3 @@ runGA statAction pop@(Population info _) =
           done ((Population _ _), gen) = gen == maxGen
           result ((Population _ (g:_)), gen) = (gen, Just g)
           result ((Population _ []), gen) = (gen, Nothing)
-          maxGen = maxGenerations info

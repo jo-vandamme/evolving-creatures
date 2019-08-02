@@ -33,6 +33,7 @@ executable evolving-creatures
     , Simulation
     , NeuralNet
     , GA
+    , GATest
     , GAOperators
     , OrganismDNA
     , Organism

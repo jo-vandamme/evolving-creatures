@@ -1,6 +1,6 @@
 module Parameters where
 
-popSize, numFood, width, height :: Num a => a
+popSize, numFood, width, height, numSteps :: Num a => a
 vMax, aMax, wMax, eatRadius :: Floating a => a
 width = 500
 height = 500
@@ -10,4 +10,4 @@ wMax = 720
 popSize = 100
 numFood = 30
 eatRadius = 5
-
+numSteps = 2500

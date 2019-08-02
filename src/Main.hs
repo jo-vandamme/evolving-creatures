@@ -45,14 +45,6 @@ display simulation = do
     flush
     swapBuffers
 
-{-
-diffSec :: TimeSpec -> TimeSpec -> Double
-diffSec (TimeSpec s1 ns1) (TimeSpec s2 ns2) = (fromIntegral dt) / 1e9
-    where t1 = (toInteger s1) * 1000000000 + toInteger ns1
-          t2 = (toInteger s2) * 1000000000 + toInteger ns2
-          dt = t1 - t2
--}
-
 idle :: IORef Simulation -> IORef TimeSpec -> IdleCallback
 idle simulation time = do
     s <- get simulation
