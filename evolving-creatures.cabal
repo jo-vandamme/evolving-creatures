@@ -32,6 +32,7 @@ executable evolving-creatures
       Render
     , Simulation
     , NeuralNet
+    , NeuralNetTest
     , GA
     , GATest
     , GAOperators
