@@ -7,7 +7,7 @@ import NeuralNet
 import Control.Monad.Random (MonadRandom, getRandomR)
 
 activations :: Floating a => [a -> a]
-activations = repeat sigmoid
+activations = repeat tanh
 
 brainTopo :: [Int]
 brainTopo = [1, 5, 2]

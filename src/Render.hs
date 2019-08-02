@@ -2,6 +2,8 @@ module Render where
 
 import Food
 import Organism
+import OrganismDNA
+import GA
 import Simulation
 
 import Graphics.UI.GLUT
@@ -26,8 +28,8 @@ renderFood f = do
         renderPrimitive TriangleFan $
             mapM_ (\(x, y) -> vertex2f x y) (unitCircle 12)
 
-renderOrganism :: Organism -> IO ()
-renderOrganism o = do
+renderOrganism :: OrganismDNA -> IO ()
+renderOrganism (OrganismDNA o) = do
     let s = 5
     preservingMatrix $ do
         color3f 0 1 0
@@ -35,11 +37,12 @@ renderOrganism o = do
         scale s s (s :: GLfloat)
         rotate (heading o) $ Vector3 0 0 1
         renderPrimitive Triangles $ do
-            vertex2f (-1) (-1.5)
-            vertex2f 1 (-1.5)
-            vertex2f 0 1.5
+            vertex2f (-1.5) 1
+            vertex2f (-1.5) (-1)
+            vertex2f 1.5 0
 
 renderSimulation :: Simulation -> IO ()
 renderSimulation s = do
+    let getOrgs (Population _ orgs) = orgs
     mapM_ renderFood $ foodParticles s
-    mapM_ renderOrganism $ organisms s
+    mapM_ renderOrganism $ getOrgs . organisms $ s

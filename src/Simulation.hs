@@ -2,23 +2,32 @@ module Simulation where
 
 import Parameters
 import Organism
+import OrganismDNA
 import Food
 import NeuralNet
+import qualified GA as GA
 import Math
 
 import Control.Monad (replicateM)
 import Control.Monad.Random (MonadRandom)
 import Data.Fixed (mod')
+import Text.Printf
 
 data Simulation = Simulation
-    { organisms     :: [Organism]
+    { organisms     :: GA.Population OrganismDNA
     , foodParticles :: [Food]
     , step          :: Int
     } deriving (Show)
 
 randomSimulation :: MonadRandom r => r Simulation
 randomSimulation = do
-    orgs <- replicateM popSize randomOrganism
+    let gaParameters = GA.Parameters { GA.size = popSize
+                                     , GA.pCrossover = crossover
+                                     , GA.pMutation = mutation
+                                     , GA.elitism = elitism
+                                     , GA.tournamentSize = tournamentSize
+                                     }
+    orgs <- GA.randomPopulation gaParameters
     food <- replicateM numFood randomFood
     return $ Simulation { organisms = orgs
                         , foodParticles = food
@@ -40,9 +49,9 @@ updateOrg dt food o =
           , health = health o + points
           }
 
-updateFood :: MonadRandom r => [Organism] -> Food -> r Food
+updateFood :: MonadRandom r => [OrganismDNA] -> Food -> r Food
 updateFood [] f = return f
-updateFood (o:os) f =
+updateFood ((OrganismDNA o):os) f =
     if d < eatRadius
        then randomFood
        else updateFood os f
@@ -73,13 +82,21 @@ normalizedAngleToFood fPos oPos oDir = theta' / 180
           theta = degrees (atan2 y x) - oDir
           theta' = if abs theta > 180 then theta + 360 else theta
 
-stepSimulation :: MonadRandom r => Float -> Simulation -> r Simulation
+stepSimulation :: Float -> Simulation -> IO Simulation
 stepSimulation dt s = do
-    let food = foodParticles s
-        orgs = organisms s
-        updatedOrgs = map (updateOrg dt food) orgs
-    updatedFood <- mapM (updateFood orgs) food
-    return $ s { organisms = updatedOrgs 
-               , foodParticles = updatedFood
-               , step = step s + 1
-               }
+    putStrLn $ printf "[%d] - %.2fms" (step s) (dt * 1000)
+    if step s >= 2000
+    then do
+        o <- GA.evolve (organisms s)
+        food <- replicateM numFood randomFood
+        return $ s { organisms = o, foodParticles = food, step = 0 }
+    else do
+        let food = foodParticles s
+            (GA.Population params orgPop) = organisms s
+            updateO (OrganismDNA o) = OrganismDNA $ updateOrg dt food o
+            updatedOrgPop = GA.Population params $ map updateO orgPop
+        updatedFood <- mapM (updateFood orgPop) food
+        return $ s { organisms = updatedOrgPop
+                   , foodParticles = updatedFood
+                   , step = step s + 1
+                   }

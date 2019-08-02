@@ -8,7 +8,6 @@ import System.Exit (exitWith, ExitCode (ExitSuccess))
 import Data.IORef (IORef, newIORef, writeIORef)
 import System.Clock (TimeSpec (..), Clock (Monotonic), getTime) 
 import System.Clock.TimeIt
-import Text.Printf
 import Graphics.UI.GLUT
 
 main :: IO ()
@@ -47,12 +46,10 @@ display simulation = do
 
 idle :: IORef Simulation -> IORef TimeSpec -> IdleCallback
 idle simulation time = do
-    s <- get simulation
     t2 <- getTime Monotonic
     t1 <- get time
     writeIORef time t2 
     let dt = diffSeconds t2 t1
-    putStrLn $ printf "[%d] - %.2fms" (step s) (dt * 1000)
     sim <- get simulation
     sim' <- stepSimulation (realToFrac dt) sim
     writeIORef simulation sim'
