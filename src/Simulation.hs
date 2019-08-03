@@ -11,12 +11,18 @@ import Math
 import Control.Monad (replicateM)
 import Control.Monad.Random (MonadRandom)
 import Data.Fixed (mod')
-import Text.Printf
+
+data Stats = Stats
+    { meanFps    :: Float
+    , generation :: Int
+    , bestScore  :: Float
+    , step       :: Int
+    } deriving (Show)
 
 data Simulation = Simulation
     { organisms     :: GA.Population OrganismDNA
     , foodParticles :: [Food]
-    , step          :: Int
+    , stats         :: Stats
     } deriving (Show)
 
 randomSimulation :: MonadRandom r => r Simulation
@@ -29,9 +35,10 @@ randomSimulation = do
                                      }
     orgs <- GA.randomPopulation gaParameters
     food <- replicateM numFood randomFood
+    let s = Stats { meanFps = 0, generation = 0, bestScore = 0, step = 0 }
     return $ Simulation { organisms = orgs
                         , foodParticles = food
-                        , step = 0
+                        , stats = s
                         }
 
 updateOrg :: Float -> [Food] -> Organism -> Organism
@@ -82,21 +89,39 @@ normalizedAngleToFood fPos oPos oDir = theta' / 180
           theta = degrees (atan2 y x) - oDir
           theta' = if abs theta > 180 then theta + 360 else theta
 
+updateStats :: Bool -> Float -> Simulation -> Stats
+updateStats newGen dt sim = stats' { meanFps = meanFps'
+                                   , generation = generation'
+                                   , bestScore = bestScore'
+                                   , step = step'
+                                   }
+    where stats' = stats sim
+          alpha = 0.1
+          currentFps = 1 / dt
+          meanFps' = alpha * currentFps + (1 - alpha) * (meanFps stats')
+          generation' = if newGen then generation stats' + 1 else generation stats'
+          bestScore' = getBestScore . organisms $ sim
+          step' = if newGen then 0 else step stats' + 1
+
+getBestScore :: GA.Population OrganismDNA -> Float
+getBestScore (GA.Population _ []) = 0
+getBestScore (GA.Population _ ((OrganismDNA o):_)) = health o
+
 stepSimulation :: Float -> Simulation -> IO Simulation
-stepSimulation dt s = do
-    putStrLn $ printf "[%d] - %.2fms" (step s) (dt * 1000)
-    if step s >= 2000
+stepSimulation dt sim = do
+    if (step . stats) sim >= numSteps
     then do
-        o <- GA.evolve (organisms s)
+        o <- GA.evolve (organisms sim)
         food <- replicateM numFood randomFood
-        return $ s { organisms = o, foodParticles = food, step = 0 }
+        let sim' = sim { organisms = o, foodParticles = food }
+        return $ sim' { stats = updateStats True dt sim' }
     else do
-        let food = foodParticles s
-            (GA.Population params orgPop) = organisms s
+        let food = foodParticles sim
+            (GA.Population params orgPop) = organisms sim
             updateO (OrganismDNA o) = OrganismDNA $ updateOrg dt food o
             updatedOrgPop = GA.Population params $ map updateO orgPop
         updatedFood <- mapM (updateFood orgPop) food
-        return $ s { organisms = updatedOrgPop
-                   , foodParticles = updatedFood
-                   , step = step s + 1
-                   }
+        let sim' = sim { organisms = updatedOrgPop
+                       , foodParticles = updatedFood
+                       }
+        return $ sim' { stats = updateStats False dt sim' }

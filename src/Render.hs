@@ -3,9 +3,11 @@ module Render where
 import Food
 import Organism
 import OrganismDNA
-import GA
+import qualified GA as GA
 import Simulation
+import Parameters
 
+import Text.Printf
 import Graphics.UI.GLUT
 
 unitCircle :: Int -> [(GLfloat, GLfloat)]
@@ -41,8 +43,28 @@ renderOrganism (OrganismDNA o) = do
             vertex2f (-1.5) (-1)
             vertex2f 1.5 0
 
+drawText :: (Float, Float, Float) -> (Float, Float) -> String -> IO ()
+drawText (r, g, b) (x, y) s = do
+    color3f r g b
+    currentRasterPosition $= Vertex4 x y 0 1
+    renderString Fixed8By13 s
+
+renderStats :: Stats -> IO ()
+renderStats s = do
+    let nSteps = printf "step %04d" (step s)
+        fps = printf "%.0f" (meanFps s)
+        genStr = "generation: " ++ (show . generation $ s)
+        scoreStr = printf "best score: %.0f" (bestScore s)
+        avgFpsStr = "Avg: " ++ fps ++ " FPS"
+        lineH = 15
+    drawText (1, 1, 1) (20, height - lineH * 1) avgFpsStr 
+    drawText (1, 1, 1) (20, height - lineH * 2) genStr 
+    drawText (1, 1, 1) (20, height - lineH * 3) nSteps
+    drawText (1, 1, 1) (20, height - lineH * 4) scoreStr
+
 renderSimulation :: Simulation -> IO ()
 renderSimulation s = do
-    let getOrgs (Population _ orgs) = orgs
+    let getOrgs (GA.Population _ orgs) = orgs
     mapM_ renderFood $ foodParticles s
     mapM_ renderOrganism $ getOrgs . organisms $ s
+    renderStats . stats $ s
