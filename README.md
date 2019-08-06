@@ -1,5 +1,5 @@
 ## Neuroevolution in Haskell
 
-Neuro evolution of apple-eating creatures using Haskell
+Neuro evolution of blueberry-eating creatures using core Haskell
 
-![Example](doc/example.gif?raw=true "Example")
+![Example](doc/example2.gif?raw=true "Example")

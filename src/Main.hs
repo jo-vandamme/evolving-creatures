@@ -16,7 +16,7 @@ main = do
     initialDisplayMode $= [RGBAMode, DoubleBuffered, WithSamplesPerPixel 4]
     initialWindowSize $= Size width height
     initialWindowPosition $= Position 100 100
-    _ <- createWindow "Hungry Creatures NeuroEvolution"
+    _ <- createWindow "Blueberry Goblins NeuroEvolution"
     s <- randomSimulation
     simulation <- newIORef s
     t <- getTime Monotonic
