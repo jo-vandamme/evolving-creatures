@@ -43,6 +43,16 @@ renderOrganism (OrganismDNA o) = do
             vertex2f (-1.5) (-1)
             vertex2f 1.5 0
 
+drawRect :: (Float, Float, Float) -> (Float, Float) -> (Float, Float) -> IO ()
+drawRect (r, g, b) (x1, y1) (x2, y2) = do
+    color3f r g b
+    renderPrimitive TriangleStrip $ do
+        vertex2f x1 y1
+        vertex2f x2 y1
+        vertex2f x2 y2
+        vertex2f x1 y2
+        vertex2f x1 y1
+
 drawText :: (Float, Float, Float) -> (Float, Float) -> String -> IO ()
 drawText (r, g, b) (x, y) s = do
     color3f r g b
@@ -51,16 +61,17 @@ drawText (r, g, b) (x, y) s = do
 
 renderStats :: Stats -> IO ()
 renderStats s = do
-    let nSteps = printf "step %04d" (step s)
+    let nSteps = printf "step %d" (step s)
         fps = printf "%.0f" (meanFps s)
         genStr = "generation: " ++ (show . generation $ s)
         scoreStr = printf "best score: %.0f" (bestScore s)
         avgFpsStr = "Avg: " ++ fps ++ " FPS"
         lineH = 15
-    drawText (1, 1, 1) (20, height - lineH * 1) avgFpsStr 
-    drawText (1, 1, 1) (20, height - lineH * 2) genStr 
-    drawText (1, 1, 1) (20, height - lineH * 3) nSteps
-    drawText (1, 1, 1) (20, height - lineH * 4) scoreStr
+    drawRect (0.2, 0.2, 0.2) (0, height) (140, height - lineH * 5 - 5)
+    drawText (1, 1, 1) (12, height - lineH * 1 - 8) avgFpsStr 
+    drawText (1, 1, 1) (12, height - lineH * 2 - 8) genStr 
+    drawText (1, 1, 1) (12, height - lineH * 3 - 8) nSteps
+    drawText (1, 1, 1) (12, height - lineH * 4 - 8) scoreStr
 
 renderSimulation :: Simulation -> IO ()
 renderSimulation s = do

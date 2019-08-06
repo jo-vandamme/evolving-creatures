@@ -12,6 +12,7 @@ class DNA a where
     crossover :: MonadRandom r => a -> a -> r a
     mutate :: MonadRandom r => a -> r a
     generate :: MonadRandom r => r a
+    reset :: MonadRandom r => a -> r a
 
 data Parameters = Parameters
     { size           :: Int
@@ -49,7 +50,8 @@ generateOffspring p@(Population info pop) idx =
     where go (r1, r2)
             | r1 <= pCross = selectParents p >>= uncurry crossover
                                              >>= mutateChild r2
-            | otherwise    = addMutation r2
+                                             >>= reset
+            | otherwise    = reset =<< addMutation r2
           mutateChild r child
             | r <= pMut   = mutate child
             | otherwise   = return child
@@ -64,8 +66,8 @@ generateOffspring p@(Population info pop) idx =
 evolve :: (DNA a, MonadRandom r) => Population a -> r (Population a)
 evolve p@(Population info pop) =
     Population <$> pure info <*>
-        (sortByM (flip $ comparingM fitness) =<< (elite ++) <$> offsprings)
-        where elite = take nOld pop
+        (sortByM (flip $ comparingM fitness) =<< ((++) <$> elite <*> offsprings))
+        where elite = traverse reset $ take nOld pop
               offsprings = replicateM (popSize - nOld) (generateOffspring p nOld)
               nOld  = round (fromIntegral popSize * elitism info)
               popSize = size info

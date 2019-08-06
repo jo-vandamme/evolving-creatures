@@ -16,6 +16,12 @@ instance DNA OrganismDNA where
     crossover (OrganismDNA a) (OrganismDNA b) = OrganismDNA <$> crossOrganisms a b
     mutate (OrganismDNA o) = OrganismDNA <$> mutateOrganism o
     generate = OrganismDNA <$> randomOrganism
+    reset (OrganismDNA o) = OrganismDNA <$> resetOrganism o
+
+resetOrganism :: MonadRandom r => Organism -> r Organism
+resetOrganism o = do
+    o' <- randomOrganism
+    return $ o' { brain = brain o  }
 
 crossOrganisms :: MonadRandom r => Organism -> Organism -> r Organism
 crossOrganisms o1 o2 = do

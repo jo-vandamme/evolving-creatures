@@ -11,6 +11,7 @@ import Math
 import Control.Monad (replicateM)
 import Control.Monad.Random (MonadRandom)
 import Data.Fixed (mod')
+import Data.List (sortBy)
 
 data Stats = Stats
     { meanFps    :: Float
@@ -100,12 +101,14 @@ updateStats newGen dt sim = stats' { meanFps = meanFps'
           currentFps = 1 / dt
           meanFps' = alpha * currentFps + (1 - alpha) * (meanFps stats')
           generation' = if newGen then generation stats' + 1 else generation stats'
-          bestScore' = getBestScore . organisms $ sim
+          bestScore' = if newGen then 0 else getBestScore . organisms $ sim
           step' = if newGen then 0 else step stats' + 1
 
 getBestScore :: GA.Population OrganismDNA -> Float
 getBestScore (GA.Population _ []) = 0
-getBestScore (GA.Population _ ((OrganismDNA o):_)) = health o
+getBestScore (GA.Population _ os) = points . head $ sortBy comparePoints os
+    where comparePoints (OrganismDNA a) (OrganismDNA b) = compare (health b) (health a)
+          points (OrganismDNA o) = health o
 
 stepSimulation :: Float -> Simulation -> IO Simulation
 stepSimulation dt sim = do

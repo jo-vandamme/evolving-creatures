@@ -14,6 +14,7 @@ instance DNA CharDNA where
     crossover (CharDNA a) (CharDNA b) = CharDNA <$> uniformCrossover a b
     mutate (CharDNA g) = CharDNA <$> mutateSingle g (const $ getRandomR (' ', 'z'))
     generate = CharDNA <$> take (length target) <$> getRandomRs (' ', 'z')
+    reset = return
 
 initPopulation :: MonadRandom r => r (Population CharDNA)
 initPopulation = randomPopulation $ Parameters
