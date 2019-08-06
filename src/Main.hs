@@ -24,6 +24,8 @@ main = do
     displayCallback $= display simulation
     reshapeCallback $= Just reshape
     idleCallback $= Just (idle simulation time)
+    lineWidth $= 1
+    lineSmooth $= Enabled
     keyboardMouseCallback $= Just (keyboardMouse simulation)
     mainLoop
 

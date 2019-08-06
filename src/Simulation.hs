@@ -17,6 +17,7 @@ data Stats = Stats
     { meanFps    :: Float
     , generation :: Int
     , bestScore  :: Float
+    , meanScore  :: Float
     , step       :: Int
     } deriving (Show)
 
@@ -36,7 +37,7 @@ randomSimulation = do
                                      }
     orgs <- GA.randomPopulation gaParameters
     food <- replicateM numFood randomFood
-    let s = Stats { meanFps = 0, generation = 0, bestScore = 0, step = 0 }
+    let s = Stats { meanFps = 0, generation = 0, bestScore = 0, meanScore = 0, step = 0 }
     return $ Simulation { organisms = orgs
                         , foodParticles = food
                         , stats = s
@@ -94,6 +95,7 @@ updateStats :: Bool -> Float -> Simulation -> Stats
 updateStats newGen dt sim = stats' { meanFps = meanFps'
                                    , generation = generation'
                                    , bestScore = bestScore'
+                                   , meanScore = meanScore'
                                    , step = step'
                                    }
     where stats' = stats sim
@@ -102,13 +104,21 @@ updateStats newGen dt sim = stats' { meanFps = meanFps'
           meanFps' = alpha * currentFps + (1 - alpha) * (meanFps stats')
           generation' = if newGen then generation stats' + 1 else generation stats'
           bestScore' = if newGen then 0 else getBestScore . organisms $ sim
+          meanScore' = if newGen then 0 else getMeanScore . organisms $ sim
           step' = if newGen then 0 else step stats' + 1
+
+getMeanScore :: GA.Population OrganismDNA -> Float
+getMeanScore (GA.Population _ []) = 0
+getMeanScore (GA.Population _ os) = getMean os
+    where getMean = (/) <$> sum . map getScore <*> fromIntegral . length
 
 getBestScore :: GA.Population OrganismDNA -> Float
 getBestScore (GA.Population _ []) = 0
-getBestScore (GA.Population _ os) = points . head $ sortBy comparePoints os
-    where comparePoints (OrganismDNA a) (OrganismDNA b) = compare (health b) (health a)
-          points (OrganismDNA o) = health o
+getBestScore (GA.Population _ os) = getScore . head $ sortBy comparePoints os
+    where comparePoints a b = compare (getScore b) (getScore a)
+
+getScore :: OrganismDNA -> Float
+getScore (OrganismDNA o) = health o
 
 stepSimulation :: Float -> Simulation -> IO Simulation
 stepSimulation dt sim = do

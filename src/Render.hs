@@ -22,7 +22,7 @@ vertex2f x y = vertex $ Vertex3 x y 0
 
 renderFood :: Food -> IO ()
 renderFood f = do
-    let s = 5
+    let s = 3
     preservingMatrix $ do
         color3f 1 0 1
         translate $ Vector3 (fst . foodPos $ f) (snd . foodPos $ f) (0 :: GLfloat)
@@ -30,11 +30,13 @@ renderFood f = do
         renderPrimitive TriangleFan $
             mapM_ (\(x, y) -> vertex2f x y) (unitCircle 12)
 
-renderOrganism :: OrganismDNA -> IO ()
-renderOrganism (OrganismDNA o) = do
+renderOrganism :: Float -> OrganismDNA -> IO ()
+renderOrganism best (OrganismDNA o) = do
     let s = 5
+        b = 3
+        c = (health o + b) / (best + b)
     preservingMatrix $ do
-        color3f 0 1 0
+        color3f 0 c 0
         translate $ Vector3 (fst . orgPos $ o) (snd . orgPos $ o) (0 :: GLfloat)
         scale s s (s :: GLfloat)
         rotate (heading o) $ Vector3 0 0 1
@@ -65,17 +67,20 @@ renderStats s = do
         fps = printf "%.0f" (meanFps s)
         genStr = "generation: " ++ (show . generation $ s)
         scoreStr = printf "best score: %.0f" (bestScore s)
+        meanScoreStr = printf "mean score: %.0f" (meanScore s)
         avgFpsStr = "Avg: " ++ fps ++ " FPS"
         lineH = 15
-    drawRect (0.2, 0.2, 0.2) (0, height) (140, height - lineH * 5 - 5)
+    drawRect (0.2, 0.2, 0.2) (0, height) (140, height - lineH * 6 - 5)
     drawText (1, 1, 1) (12, height - lineH * 1 - 8) avgFpsStr 
     drawText (1, 1, 1) (12, height - lineH * 2 - 8) genStr 
     drawText (1, 1, 1) (12, height - lineH * 3 - 8) nSteps
     drawText (1, 1, 1) (12, height - lineH * 4 - 8) scoreStr
+    drawText (1, 1, 1) (12, height - lineH * 5 - 8) meanScoreStr
 
 renderSimulation :: Simulation -> IO ()
 renderSimulation s = do
     let getOrgs (GA.Population _ orgs) = orgs
+        best = bestScore . stats $ s
     mapM_ renderFood $ foodParticles s
-    mapM_ renderOrganism $ getOrgs . organisms $ s
+    mapM_ (renderOrganism best) $ getOrgs . organisms $ s
     renderStats . stats $ s

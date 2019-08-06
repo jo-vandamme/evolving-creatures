@@ -65,9 +65,9 @@ generateOffspring p@(Population info pop) idx =
 
 evolve :: (DNA a, MonadRandom r) => Population a -> r (Population a)
 evolve p@(Population info pop) =
-    Population <$> pure info <*>
-        (sortByM (flip $ comparingM fitness) =<< ((++) <$> elite <*> offsprings))
-        where elite = traverse reset $ take nOld pop
+    Population <$> pure info <*> (sortByM (flip $ comparingM fitness) =<< newPop)
+        where newPop = (++) <$> elite <*> offsprings
+              elite = traverse reset $ take nOld pop
               offsprings = replicateM (popSize - nOld) (generateOffspring p nOld)
               nOld  = round (fromIntegral popSize * elitism info)
               popSize = size info
