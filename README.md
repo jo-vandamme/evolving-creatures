@@ -2,4 +2,4 @@
 
 Neuro evolution of apple-eating creatures using Haskell
 
-![Screenshot](doc/images/screenshot.png?raw=true "Screenshot")
+![Example](doc/example.gif?raw=true "Example")

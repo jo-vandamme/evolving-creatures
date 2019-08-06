@@ -63,12 +63,12 @@ drawText (r, g, b) (x, y) s = do
 
 renderStats :: Stats -> IO ()
 renderStats s = do
-    let nSteps = printf "step %d" (step s)
+    let nSteps = printf "sim. step: %d" (step s)
         fps = printf "%.0f" (meanFps s)
         genStr = "generation: " ++ (show . generation $ s)
         scoreStr = printf "best score: %.0f" (bestScore s)
         meanScoreStr = printf "mean score: %.0f" (meanScore s)
-        avgFpsStr = "Avg: " ++ fps ++ " FPS"
+        avgFpsStr = fps ++ " FPS"
         lineH = 15
     drawRect (0.2, 0.2, 0.2) (0, height) (140, height - lineH * 6 - 5)
     drawText (1, 1, 1) (12, height - lineH * 1 - 8) avgFpsStr 
