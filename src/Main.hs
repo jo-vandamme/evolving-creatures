@@ -55,7 +55,10 @@ idle simulation time = do
     sim <- get simulation
     sim' <- stepSimulation (realToFrac dt) sim
     writeIORef simulation sim'
-    postRedisplay Nothing
+    let newStep = step . stats $ sim'
+    if mod newStep 2 == 0
+       then postRedisplay Nothing
+       else return ()
 
 keyboardMouse :: IORef Simulation -> KeyboardMouseCallback
 keyboardMouse _simulation key _state _modifiers _position = case key of

@@ -19,6 +19,7 @@ data Stats = Stats
     , bestScore  :: Float
     , meanScore  :: Float
     , step       :: Int
+    , duration   :: Float
     } deriving (Show)
 
 data Simulation = Simulation
@@ -37,7 +38,13 @@ randomSimulation = do
                                      }
     orgs <- GA.randomPopulation gaParameters
     food <- replicateM numFood randomFood
-    let s = Stats { meanFps = 0, generation = 0, bestScore = 0, meanScore = 0, step = 0 }
+    let s = Stats { meanFps = 0
+                  , generation = 0
+                  , bestScore = 0
+                  , meanScore = 0
+                  , duration = 0
+                  , step = 0
+                  }
     return $ Simulation { organisms = orgs
                         , foodParticles = food
                         , stats = s
@@ -97,15 +104,17 @@ updateStats newGen dt sim = stats' { meanFps = meanFps'
                                    , bestScore = bestScore'
                                    , meanScore = meanScore'
                                    , step = step'
+                                   , duration = duration'
                                    }
     where stats' = stats sim
-          alpha = 0.1
+          alpha = 0.05
           currentFps = 1 / dt
           meanFps' = alpha * currentFps + (1 - alpha) * (meanFps stats')
           generation' = if newGen then generation stats' + 1 else generation stats'
           bestScore' = if newGen then 0 else getBestScore . organisms $ sim
           meanScore' = if newGen then 0 else getMeanScore . organisms $ sim
           step' = if newGen then 0 else step stats' + 1
+          duration' = if newGen then 0 else duration stats' + dt
 
 getMeanScore :: GA.Population OrganismDNA -> Float
 getMeanScore (GA.Population _ []) = 0
@@ -122,7 +131,7 @@ getScore (OrganismDNA o) = health o
 
 stepSimulation :: Float -> Simulation -> IO Simulation
 stepSimulation dt sim = do
-    if (step . stats) sim >= numSteps
+    if (duration . stats) sim >= simDuration
     then do
         o <- GA.evolve (organisms sim)
         food <- replicateM numFood randomFood
