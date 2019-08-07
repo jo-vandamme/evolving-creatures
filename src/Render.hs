@@ -33,16 +33,20 @@ renderFood f = do
 renderOrganism :: Float -> OrganismDNA -> IO ()
 renderOrganism best (OrganismDNA o) = do
     let f = health o / (2 * best) + 0.5 -- 0.5 to 1
-        sz = 10 * f
+        sz = 8 * f
     preservingMatrix $ do
-        color3f f f f
         translate $ Vector3 (fst . orgPos $ o) (snd . orgPos $ o) (0 :: GLfloat)
         scale sz sz (sz :: GLfloat)
-        rotate (heading o) $ Vector3 0 0 1
-        renderPrimitive Triangles $ do
-            vertex2f (-1) 0.5
-            vertex2f (-1) (-0.5)
-            vertex2f 1 0
+        color3f 0.5 0.5 0.5
+        renderPrimitive TriangleFan $
+            mapM_ (\(x, y) -> vertex2f x y) (unitCircle 12)
+        preservingMatrix $ do
+            color3f 1 1 1
+            rotate (heading o) $ Vector3 0 0 1
+            scale 0.5 0.5 (0.5 :: GLfloat)
+            translate $ Vector3 1.5 0 (0 :: GLfloat)
+            renderPrimitive TriangleFan $
+                mapM_ (\(x, y) -> vertex2f x y) (unitCircle 12)
 
 drawRect :: (Float, Float, Float) -> (Float, Float) -> (Float, Float) -> IO ()
 drawRect (r, g, b) (x1, y1) (x2, y2) = do
