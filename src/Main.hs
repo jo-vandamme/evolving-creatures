@@ -1,14 +1,15 @@
 module Main where
 
-import Parameters
-import Simulation
-import Render
+import           Parameters
+import           Render
+import           Simulation
 
-import System.Exit (exitWith, ExitCode (ExitSuccess))
-import Data.IORef (IORef, newIORef, writeIORef)
-import System.Clock (TimeSpec (..), Clock (Monotonic), getTime) 
-import System.Clock.TimeIt
-import Graphics.UI.GLUT
+import           Control.Monad       (when)
+import           Data.IORef          (IORef, newIORef, writeIORef)
+import           Graphics.UI.GLUT
+import           System.Clock        (Clock (Monotonic), TimeSpec (..), getTime)
+import           System.Clock.TimeIt
+import           System.Exit         (exitSuccess)
 
 main :: IO ()
 main = do
@@ -50,17 +51,15 @@ idle :: IORef Simulation -> IORef TimeSpec -> IdleCallback
 idle simulation time = do
     t2 <- getTime Monotonic
     t1 <- get time
-    writeIORef time t2 
+    writeIORef time t2
     let dt = diffSeconds t2 t1
     sim <- get simulation
     sim' <- stepSimulation (realToFrac dt) sim
     writeIORef simulation sim'
     let newStep = step . stats $ sim'
-    if mod newStep 2 == 0
-       then postRedisplay Nothing
-       else return ()
+    when (even newStep) $ postRedisplay Nothing
 
 keyboardMouse :: IORef Simulation -> KeyboardMouseCallback
 keyboardMouse _simulation key _state _modifiers _position = case key of
-    (Char 'q') -> exitWith ExitSuccess
-    _ -> return ()
+    (Char 'q') -> exitSuccess
+    _          -> return ()

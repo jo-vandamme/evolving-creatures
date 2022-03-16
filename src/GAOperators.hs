@@ -1,6 +1,6 @@
 module GAOperators where
 
-import Control.Monad.Random
+import           Control.Monad.Random
 
 uniformCrossover :: MonadRandom r => [a] -> [a] -> r [a]
 uniformCrossover a b =

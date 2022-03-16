@@ -1,10 +1,10 @@
 module Organism where
 
-import Math
-import Parameters
-import NeuralNet
+import           Math
+import           NeuralNet
+import           Parameters
 
-import Control.Monad.Random (MonadRandom, getRandomR)
+import           Control.Monad.Random (MonadRandom, getRandomR)
 
 activations :: Floating a => [a -> a]
 activations = repeat tanh
@@ -31,7 +31,7 @@ randomOrganism = do
     b <- randomNet uniform uniform brainTopo activations
     return $ Organism { orgPos = (x, y)
                       , heading = d
-                      , speed = v 
+                      , speed = v
                       , accel = a
                       , brain = b
                       , health = 0

@@ -1,15 +1,15 @@
 module NeuralNet where
 
-import Control.Monad.Random
-import Data.List
+import           Control.Monad.Random
+import           Data.List
 
 data Layer a = Layer { weights    :: [[a]]
                      , biases     :: [a]
                      , activation :: a -> a
                      }
 
-data NeuralNet a = NeuralNet { layers :: [Layer a]
-                             } deriving (Eq)
+newtype NeuralNet a = NeuralNet { layers :: [Layer a]
+                                } deriving (Eq)
 
 instance Eq a => Eq (Layer a) where
     a == b = weights a == weights b && biases a == biases b
@@ -17,7 +17,7 @@ instance Eq a => Eq (Layer a) where
 instance Show a => Show (Layer a) where
     show l = "#  Layer " ++ show n1 ++ " x " ++ show n2 ++ "\nw: " ++
         show (weights l) ++ "\nb: " ++ show (biases l)
-        where n1 = length $ (weights l) !! 0
+        where n1 = length $ head (weights l)
               n2 = length $ weights l
 
 instance Show a => Show (NeuralNet a) where
@@ -26,7 +26,7 @@ instance Show a => Show (NeuralNet a) where
 -- Activation functions
 
 relu :: (Floating a, Ord a) => a -> a
-relu a = if (a > 0) then a else 0
+relu a = if a > 0 then a else 0
 
 sigmoid :: Floating a => a -> a
 sigmoid t = 1 / (1 + exp (-1 * t))
@@ -56,7 +56,7 @@ randomNet rW rB sizes@(_:ts) activations =
 
 layerPredict :: Floating a => [a] -> Layer a -> [a]
 layerPredict inputs layer = activation layer <$>
-    (zipWith (+) (biases layer) $
+    zipWith (+) (biases layer) (
         sum . zipWith (*) inputs <$> weights layer)
 
 networkPredict :: Floating a => NeuralNet a -> [a] -> [a]

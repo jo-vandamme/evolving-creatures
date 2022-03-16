@@ -1,8 +1,8 @@
 module GATest where
 
-import GA
-import GAOperators
-import Control.Monad.Random
+import           Control.Monad.Random
+import           GA
+import           GAOperators
 
 newtype CharDNA = CharDNA String deriving (Show)
 
@@ -13,7 +13,7 @@ instance DNA CharDNA where
     fitness (CharDNA g) = return $ fromIntegral . sum . map fromEnum $ zipWith (==) target g
     crossover (CharDNA a) (CharDNA b) = CharDNA <$> uniformCrossover a b
     mutate (CharDNA g) = CharDNA <$> mutateSingle g (const $ getRandomR (' ', 'z'))
-    generate = CharDNA <$> take (length target) <$> getRandomRs (' ', 'z')
+    generate = CharDNA . take (length target) <$> getRandomRs (' ', 'z')
     reset = return
 
 initPopulation :: MonadRandom r => r (Population CharDNA)

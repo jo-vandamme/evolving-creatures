@@ -1,6 +1,6 @@
 module NeuralNetTest where
 
-import NeuralNet
+import           NeuralNet
 
 xorNet :: NeuralNet Float
 xorNet = NeuralNet [input, output]

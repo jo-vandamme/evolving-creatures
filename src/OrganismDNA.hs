@@ -1,13 +1,13 @@
 module OrganismDNA where
 
-import Organism
-import NeuralNet
-import GA
-import GAOperators
-import Math
+import           GA
+import           GAOperators
+import           Math
+import           NeuralNet
+import           Organism
 
-import Control.Monad.Random hiding (uniform)
-import Data.List.Split (chunksOf)
+import           Control.Monad.Random hiding (uniform)
+import           Data.List.Split      (chunksOf)
 
 newtype OrganismDNA = OrganismDNA Organism deriving (Show)
 
@@ -40,10 +40,10 @@ mutateOrganism o = do
     return $ o { brain = b' }
 
 encodeBrain :: NeuralNet a -> [a]
-encodeBrain = concat . map encodeLayer . layers
+encodeBrain = concatMap encodeLayer . layers
 
 encodeLayer :: Layer a -> [a]
-encodeLayer l = (biases l) ++ concat (weights l)
+encodeLayer l = biases l ++ concat (weights l)
 
 decodeBrain :: [Int] -> [a -> a] -> [a] -> NeuralNet a
 decodeBrain [] _ _ = NeuralNet []
@@ -57,6 +57,6 @@ decodeBrain szs@(_:ts) actFns dna = NeuralNet $ go dna layerSizes actFns
                   rest  = go (drop (m * n + n) values) sizes as
 
 decodeLayer :: (Int, Int) -> [a] -> (a -> a) -> Layer a
-decodeLayer (n1, n2) values actFn = Layer weights' biases' actFn
+decodeLayer (n1, n2) values = Layer weights' biases'
     where biases' = take n2 values
           weights' = chunksOf n1 $ take (n1 * n2) $ drop n2 values

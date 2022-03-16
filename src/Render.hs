@@ -1,14 +1,14 @@
 module Render where
 
-import Food
-import Organism
-import OrganismDNA
-import qualified GA as GA
-import Simulation
-import Parameters
+import           Food
+import qualified GA
+import           Organism
+import           OrganismDNA
+import           Parameters
+import           Simulation
 
-import Text.Printf
-import Graphics.UI.GLUT
+import           Graphics.UI.GLUT
+import           Text.Printf
 
 unitCircle :: Int -> [(GLfloat, GLfloat)]
 unitCircle n' = [(sin (2*pi*k/n), cos (2*pi*k/n)) | k <- [1..n]]
@@ -25,28 +25,28 @@ renderFood f = do
     let s = 3
     preservingMatrix $ do
         color3f 0.3 0.5 1
-        translate $ Vector3 (fst . foodPos $ f) (snd . foodPos $ f) (0 :: GLfloat)
+        translate $ uncurry Vector3 (foodPos f) (0 :: GLfloat)
         scale s s (s :: GLfloat)
         renderPrimitive TriangleFan $
-            mapM_ (\(x, y) -> vertex2f x y) (unitCircle 12)
+            mapM_ (uncurry vertex2f) (unitCircle 12)
 
 renderOrganism :: Float -> OrganismDNA -> IO ()
 renderOrganism best (OrganismDNA o) = do
     let f = health o / (2 * best) + 0.5 -- 0.5 to 1
         sz = 8 * f
     preservingMatrix $ do
-        translate $ Vector3 (fst . orgPos $ o) (snd . orgPos $ o) (0 :: GLfloat)
+        translate $ uncurry Vector3 (orgPos o) (0 :: GLfloat)
         scale sz sz (sz :: GLfloat)
         color3f 0.5 0.5 0.5
         renderPrimitive TriangleFan $
-            mapM_ (\(x, y) -> vertex2f x y) (unitCircle 12)
+            mapM_ (uncurry vertex2f) (unitCircle 12)
         preservingMatrix $ do
             color3f 1 1 1
             rotate (heading o) $ Vector3 0 0 1
             scale 0.5 0.5 (0.5 :: GLfloat)
             translate $ Vector3 1.5 0 (0 :: GLfloat)
             renderPrimitive TriangleFan $
-                mapM_ (\(x, y) -> vertex2f x y) (unitCircle 12)
+                mapM_ (uncurry vertex2f) (unitCircle 12)
 
 drawRect :: (Float, Float, Float) -> (Float, Float) -> (Float, Float) -> IO ()
 drawRect (r, g, b) (x1, y1) (x2, y2) = do
@@ -70,7 +70,7 @@ renderStats s = do
         scoreStr = printf "best score %.0f - mean %.1f" (bestScore s) (meanScore s)
         lineH = 15
     drawRect (0.2, 0.2, 0.2) (0, height) (230, height - lineH * 3 - 5)
-    drawText (1, 1, 1) (12, height - lineH * 1 - 8) genStr 
+    drawText (1, 1, 1) (12, height - lineH - 8) genStr
     drawText (1, 1, 1) (12, height - lineH * 2 - 8) scoreStr
 
 renderSimulation :: Simulation -> IO ()

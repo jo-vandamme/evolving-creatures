@@ -1,17 +1,18 @@
 module Simulation where
 
-import Parameters
-import Organism
-import OrganismDNA
-import Food
-import NeuralNet
-import qualified GA as GA
-import Math
+import           Food
+import qualified GA
+import           Math
+import           NeuralNet
+import           Organism
+import           OrganismDNA
+import           Parameters
 
-import Control.Monad (replicateM)
-import Control.Monad.Random (MonadRandom)
-import Data.Fixed (mod')
-import Data.List (sortBy)
+import           Control.Monad        (replicateM)
+import           Control.Monad.Random (MonadRandom)
+import           Data.Bifunctor       (bimap)
+import           Data.Fixed           (mod')
+import           Data.List            (minimumBy)
 
 data Stats = Stats
     { meanFps    :: Float
@@ -59,7 +60,7 @@ updateOrg dt food o =
         v  = max 0 . min vMax . (+dv) . speed $ o
         dx = v * dt * cos (radians r)
         dy = v * dt * sin (radians r)
-     in o { orgPos = ((+dx) . fst . orgPos $ o, (+dy) . snd . orgPos $ o)
+     in o { orgPos = bimap (+ dx) (+ dy) (orgPos o)
           , heading = r
           , speed = v
           , health = health o + points
@@ -71,13 +72,13 @@ updateFood ((OrganismDNA o):os) f =
     if d < eatRadius
        then randomFood
        else updateFood os f
-    where d = vdist (orgPos o) (foodPos f) 
+    where d = vdist (orgPos o) (foodPos f)
 
 useBrain :: [Food] -> Organism -> (Float, Float, Float)
 useBrain food o =
     case findClosestFood food o of
         Just (f, dmin) -> go f dmin
-        Nothing -> (0, 0, 0)
+        Nothing        -> (0, 0, 0)
     where go f d =
             let angle = normalizedAngleToFood (foodPos f) (orgPos o) (heading o)
                 out = networkPredict (brain o) [angle]
@@ -85,7 +86,7 @@ useBrain food o =
                 dv = head . tail $ out
                 points = if d < eatRadius then energy f else 0
             in (dr, dv, points)
-        
+
 findClosestFood :: [Food] -> Organism -> Maybe (Food, Float)
 findClosestFood [] _ = Nothing
 findClosestFood fds@(f:_) o = Just $ foldr go (f, vdist (foodPos f) (orgPos o)) fds
@@ -109,7 +110,7 @@ updateStats newGen dt sim = stats' { meanFps = meanFps'
     where stats' = stats sim
           alpha = 0.05
           currentFps = 1 / dt
-          meanFps' = alpha * currentFps + (1 - alpha) * (meanFps stats')
+          meanFps' = alpha * currentFps + (1 - alpha) * meanFps stats'
           generation' = if newGen then generation stats' + 1 else generation stats'
           bestScore' = if newGen then 0 else getBestScore . organisms $ sim
           meanScore' = if newGen then 0 else getMeanScore . organisms $ sim
@@ -123,7 +124,7 @@ getMeanScore (GA.Population _ os) = getMean os
 
 getBestScore :: GA.Population OrganismDNA -> Float
 getBestScore (GA.Population _ []) = 0
-getBestScore (GA.Population _ os) = getScore . head $ sortBy comparePoints os
+getBestScore (GA.Population _ os) = getScore (minimumBy comparePoints os)
     where comparePoints a b = compare (getScore b) (getScore a)
 
 getScore :: OrganismDNA -> Float

@@ -1,9 +1,9 @@
 module Food where
 
-import Parameters
-import Math
+import           Math
+import           Parameters
 
-import Control.Monad.Random (MonadRandom, getRandomR)
+import           Control.Monad.Random (MonadRandom, getRandomR)
 
 data Food = Food
     { foodPos :: Vec2

@@ -1,6 +1,6 @@
 module Math where
 
-import Control.Monad.Random
+import           Control.Monad.Random
 
 type Vec2 = (Float, Float)
 
